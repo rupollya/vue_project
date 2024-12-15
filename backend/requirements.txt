@@ -1,0 +1,13 @@
+fastapi
+gunicorn
+uvicorn
+pymysql
+passlib
+bcrypt
+pyjwt
+sqlalchemy
+jose
+python-jose
+pydantic
+aiofiles
+python-multipart
