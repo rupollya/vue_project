@@ -5,7 +5,11 @@
     { "path": "./tsconfig.node.json" }
   ],
   "compilerOptions": {
+    "types": ["vitest"],
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true
-  }
+  },
+  "types": [
+    "axios-mock-adapter"
+  ]
 }

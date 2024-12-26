@@ -1,4 +1,4 @@
-from .py.database import *
+from py.database import *
 from fastapi import Depends, FastAPI, Body
 from fastapi import Response
 from sqlalchemy.orm import Session
@@ -155,20 +155,37 @@ async def get_tasks(request: Request, db: Session = Depends(get_db)):
         detail="Не удалось подтвердить учетные данные",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    
-    token = request.headers.get("Authorization")
-    if token is None or not token.startswith("Bearer "):
-        raise credentials_exception
-    token = token[7:]
+    token = request.cookies.get("users_access_token")
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Не удалось подтвердить учетные данные",
+        )
 
+    # Декодирование JWT токена
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("sub")
         if user_id is None:
             raise credentials_exception
-    except JWTError as e:
-        print(f"JWT Error: {e}")
-        raise credentials_exception
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Не удалось подтвердить учетные данные",
+        )
+    # token = request.headers.get("Authorization")
+    # if token is None or not token.startswith("Bearer "):
+    #     raise credentials_exception
+    # token = token[7:]
+
+    # try:
+    #     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    #     user_id: str = payload.get("sub")
+    #     if user_id is None:
+    #         raise credentials_exception
+    # except JWTError as e:
+    #     print(f"JWT Error: {e}")
+    #     raise credentials_exception
 
     # Получаем задачи пользователя
     tasks = get_tasks_by_user(db, int(user_id))
@@ -191,25 +208,43 @@ async def create_task(
     - **importance**: Важность задачи
     """
     print(f"Received task data: {task}")
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Не удалось подтвердить учетные данные",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
+    token = request.cookies.get("users_access_token")
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Не удалось подтвердить учетные данные",
+        )
 
-    token = request.headers.get("Authorization")
-    if token is None or not token.startswith("Bearer "):
-        raise credentials_exception
-    token = token[7:]
-
+    # Декодирование JWT токена
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("sub")
         if user_id is None:
             raise credentials_exception
-    except JWTError as e:
-        print(f"JWT Error: {e}")
-        raise credentials_exception
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Не удалось подтвердить учетные данные",
+        )
+    # credentials_exception = HTTPException(
+    #     status_code=status.HTTP_401_UNAUTHORIZED,
+    #     detail="Не удалось подтвердить учетные данные",
+    #     headers={"WWW-Authenticate": "Bearer"},
+    # )
+
+    # token = request.headers.get("Authorization")
+    # if token is None or not token.startswith("Bearer "):
+    #     raise credentials_exception
+    # token = token[7:]
+
+    # try:
+    #     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    #     user_id: str = payload.get("sub")
+    #     if user_id is None:
+    #         raise credentials_exception
+    # except JWTError as e:
+    #     print(f"JWT Error: {e}")
+    #     raise credentials_exception
 
     try:
         new_task = Task(
@@ -234,28 +269,45 @@ class TaskUpdate(BaseModel):
 
 @app.put("/task/{task_id}/update")
 async def update_task(task_id: int,task_update: TaskUpdate,request: Request,db: Session = Depends(get_db)):
+    token = request.cookies.get("users_access_token")
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Не удалось подтвердить учетные данные",
+        )
 
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Не удалось подтвердить учетные данные",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    
-    token = request.headers.get("Authorization")
-    print(f"Received Token: {token}")
-    if token is None or not token.startswith("Bearer "):
-        raise credentials_exception
-    token = token[7:]
-
+    # Декодирование JWT токена
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("sub")
-        print(f"Decoded user_id: {user_id}")
         if user_id is None:
             raise credentials_exception
-    except JWTError as e:
-        print(f"JWT Error: {e}")
-        raise credentials_exception
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Не удалось подтвердить учетные данные",
+        )
+    # credentials_exception = HTTPException(
+    #     status_code=status.HTTP_401_UNAUTHORIZED,
+    #     detail="Не удалось подтвердить учетные данные",
+    #     headers={"WWW-Authenticate": "Bearer"},
+    # )
+    
+    # token = request.headers.get("Authorization")
+    # print(f"Received Token: {token}")
+    # if token is None or not token.startswith("Bearer "):
+    #     raise credentials_exception
+    # token = token[7:]
+
+    # try:
+    #     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    #     user_id: str = payload.get("sub")
+    #     print(f"Decoded user_id: {user_id}")
+    #     if user_id is None:
+    #         raise credentials_exception
+    # except JWTError as e:
+    #     print(f"JWT Error: {e}")
+    #     raise credentials_exception
     
     # task = db.query(Task).filter(Task.task_id == task_id).first()
     # if task.user_id != user_id:
@@ -287,27 +339,47 @@ async def task_delete(task_id: int, request: Request, db: Session = Depends(get_
     Удаляет задачу определенного пользователя.
     Требуется аутентификация пользователя по login в токене.
     """
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Не удалось подтвердить учетные данные",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    
-    token = request.headers.get("Authorization")
-    print(f"Received Token: {token}")
-    if token is None or not token.startswith("Bearer "):
-        raise credentials_exception
-    token = token[7:]
 
+    token = request.cookies.get("users_access_token")
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Не удалось подтвердить учетные данные",
+        )
+
+    # Декодирование JWT токена
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("sub")
-        print(f"Decoded user_id: {user_id}")
         if user_id is None:
             raise credentials_exception
-    except JWTError as e:
-        print(f"JWT Error: {e}")
-        raise credentials_exception
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Не удалось подтвердить учетные данные",
+        )
+
+    # credentials_exception = HTTPException(
+    #     status_code=status.HTTP_401_UNAUTHORIZED,
+    #     detail="Не удалось подтвердить учетные данные",
+    #     headers={"WWW-Authenticate": "Bearer"},
+    # )
+    
+    # token = request.headers.get("Authorization")
+    # print(f"Received Token: {token}")
+    # if token is None or not token.startswith("Bearer "):
+    #     raise credentials_exception
+    # token = token[7:]
+
+    # try:
+    #     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    #     user_id: str = payload.get("sub")
+    #     print(f"Decoded user_id: {user_id}")
+    #     if user_id is None:
+    #         raise credentials_exception
+    # except JWTError as e:
+    #     print(f"JWT Error: {e}")
+    #     raise credentials_exception
     
     
 
@@ -349,27 +421,45 @@ async def update_task(
     - **important**: Важность задачи
     - **completed**: Статус задачи
     """
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Не удалось подтвердить учетные данные",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    
-    token = request.headers.get("Authorization")
-    print(f"Received Token: {token}")
-    if token is None or not token.startswith("Bearer "):
-        raise credentials_exception
-    token = token[7:]
+    token = request.cookies.get("users_access_token")
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Не удалось подтвердить учетные данные",
+        )
 
+    # Декодирование JWT токена
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("sub")
-        print(f"Decoded user_id: {user_id}")
         if user_id is None:
             raise credentials_exception
-    except JWTError as e:
-        print(f"JWT Error: {e}")
-        raise credentials_exception
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Не удалось подтвердить учетные данные",
+        )
+    # credentials_exception = HTTPException(
+    #     status_code=status.HTTP_401_UNAUTHORIZED,
+    #     detail="Не удалось подтвердить учетные данные",
+    #     headers={"WWW-Authenticate": "Bearer"},
+    # )
+    
+    # token = request.headers.get("Authorization")
+    # print(f"Received Token: {token}")
+    # if token is None or not token.startswith("Bearer "):
+    #     raise credentials_exception
+    # token = token[7:]
+
+    # try:
+    #     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    #     user_id: str = payload.get("sub")
+    #     print(f"Decoded user_id: {user_id}")
+    #     if user_id is None:
+    #         raise credentials_exception
+    # except JWTError as e:
+    #     print(f"JWT Error: {e}")
+    #     raise credentials_exception
     
     
     task = db.query(Task).filter(Task.task_id == task_id).first()
@@ -386,3 +476,4 @@ async def update_task(
     db.refresh(task)
 
     return task
+
