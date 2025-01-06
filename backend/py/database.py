@@ -1,5 +1,4 @@
 from sqlalchemy import create_engine, exc, text
-from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime, timedelta, timezone
 from typing import Union, Optional, List
@@ -55,27 +54,27 @@ class UserDB(Base):
 class Task(Base):
     __tablename__ = "tasks"
 
-    task_id = Column(Integer, primary_key=True, index=True)  # task_id в базе данных
+    task_id = Column(Integer, primary_key=True, index=True)  
     user_id = Column(Integer, ForeignKey("users.user_id"))
-    createdAt = Column(DateTime, default=datetime.utcnow)  # created_at в базе данных
+    createdAt = Column(DateTime, default=datetime.utcnow)   
     importance = Column(String(10), default="низкая")
     completed = Column(Boolean, default=False)
-    title = Column(String(1000), nullable=True)  # heading в базе данных
+    title = Column(String(1000), nullable=True)  
     deadline = Column(String(100), nullable=True)
 
 # Pydantic модель ответа задачи
 class TaskResponse(BaseModel):
-    task_id: int  # будет отображаться как task_id в SQLAlchemy
-    title: str  # будет отображаться как heading в SQLAlchemy
+    task_id: int   
+    title: str  
     deadline: Optional[str] = None
     completed: bool
     importance: str
     user_id: Optional[int] = None
-    createdAt: datetime  # будет отображаться как created_at в SQLAlchemy
+    createdAt: datetime   
 
     class Config:
-        orm_mode = True  # Включаем поддержку работы с объектами ORM
-        from_attributes = True  # Это нужно для корректной работы with from_orm
+        orm_mode = True  
+        from_attributes = True   
 
 
 # Pydantic модель для пользователя

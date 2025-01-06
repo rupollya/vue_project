@@ -121,17 +121,17 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
-import AddTaskForm from './AddTaskForm.vue';
-import Navbar from './navbarmain.vue';
-import TaskItem from './TaskItem.vue';
-import TaskFilters from './TaskFilters.vue';
-import SearchTask from './SearchTasks.vue';
-import Cookies from 'js-cookie';
-import axios from 'axios';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import { Modal } from 'bootstrap';
-import 'bootstrap'
+  import { defineComponent } from 'vue';
+  import AddTaskForm from './AddTaskForm.vue';
+  import Navbar from './navbarmain.vue';
+  import TaskItem from './TaskItem.vue';
+  import TaskFilters from './TaskFilters.vue';
+  import SearchTask from './SearchTasks.vue';
+  import Cookies from 'js-cookie';
+  import axios from 'axios';
+  import 'bootstrap/dist/css/bootstrap.min.css';
+  import { Modal } from 'bootstrap';
+  import 'bootstrap'
 
 // Тип для фильтров задач
 type Filter = 'all' | 'completed' | 'pending';
@@ -223,7 +223,7 @@ export default defineComponent({
     async fetchTasks() {
       const token = Cookies.get('users_access_token'); // Получение токена пользователя из cookies
       try {
-        const response = await axios.get('/api/task/user/task_all', {
+        const response = await axios.get('/api/tasks/user/task_all', {
           headers: {
             'Authorization': `Bearer ${token}`, // Авторизация через Bearer токен
           },
@@ -247,7 +247,7 @@ export default defineComponent({
     async addTask(task: Task) {
       const token = Cookies.get('users_access_token'); // Получение токена пользователя
       try {
-        const response = await axios.post('/api/task/create', task, {
+        const response = await axios.post('/api/tasks/task/create', task, {
           headers: {
             'Content-Type': 'application/json', // Указание типа контента
             'Authorization': `Bearer ${token}`, // Авторизация через Bearer токен
@@ -287,14 +287,13 @@ export default defineComponent({
     // Изменение статуса задачи (завершена/незавершена)
     async toggleTaskStatus(taskId: string) {
       const token = Cookies.get('users_access_token');
-      console.log('Token:', token);
       console.log("Идентификатор задачи:", taskId);
       // Поиск задачи по идентификатору
       const task = this.tasks.find((task: { task_id: string; }) => task.task_id === taskId);
       if (task) {
         try {
           console.log(taskId);
-          const response = await axios.put(`/api/task/${taskId}/update`, { completed: !task.completed }, {
+          const response = await axios.put(`/api/tasks/task/${taskId}/update`, { completed: !task.completed }, {
             headers: {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${token}`,
@@ -325,7 +324,7 @@ export default defineComponent({
       if (task) {
         try {
           console.log(taskId);
-          const response = await axios.delete(`/api/task/delete/${taskId}`, {
+          const response = await axios.delete(`/api/tasks/task/delete/${taskId}`, {
             headers: {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${token}`,
@@ -367,7 +366,7 @@ export default defineComponent({
         return;
       }
       try {
-        const response = await axios.put(`/api/task/editing/${this.editedTask.task_id}`, this.editedTask, {
+        const response = await axios.put(`/api/tasks/task/editing/${this.editedTask.task_id}`, this.editedTask, {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`,

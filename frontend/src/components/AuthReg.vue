@@ -160,7 +160,7 @@ export default defineComponent({
           const params = new URLSearchParams();
           params.append('username', this.login);
           params.append('password', this.password);
-          const response = await axios.post('/api/users/login', params.toString(), {
+          const response = await axios.post('/api/auth/login', params.toString(), {
             headers: {
               'Content-Type': 'application/x-www-form-urlencoded',
             },
@@ -191,7 +191,7 @@ export default defineComponent({
           password: this.password,
         };
         try {
-          const response = await axios.post('/api/user/registration', newUser);
+          const response = await axios.post('/api/auth/registration', newUser);
           console.log(response);
           alert('Регистрация успешна!');
           this.isLogin = true;
